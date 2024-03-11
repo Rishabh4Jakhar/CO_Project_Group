@@ -37,6 +37,13 @@ register_dict = {
     "t6": 31
 }
 
+# Define the opcode dictionary
+valid={"add":"011011","sub":"0110011","sll":"0110011","slt":"0110011","sltu":"0110011","xor":"0110011","srl":"0110011","or":"0110011"
+       ,"and":"0110011","lw":"0000011","addi":"0010011","sltiu":"0010011","jalr":"1100111","sw":"0100011","beq":"1100011","bne":"1100011","blt":"1100011","bge":"1100011","bltu":"1100011","bgeu":"1100011"
+      , "lui":"0110111","auipc":"0010111","jal":"1101111"}
+# List of registers (useless)
+regi=["zero","ra","sp","gp","tp","t0","t1","t2","s0","fp","a0","a1","a2","a3","a4","a5","a6","a7","s2","s3","s4","s5","s6","s7","s8"
+      ,"s9","s10","s11","t3","t4","t5","t6", "s1"]
 
 # R-Type Instructions
 def add(rd, rs1, rs2):
@@ -70,8 +77,6 @@ def and_(rd, rs1, rs2):
     return "0000000" + format(register_dict[rs2], "05b") + format(register_dict[rs1], "05b") + "111" + format(register_dict[rd], "05b") + "0110011"
 
 # I-Type Instructions
-# Also add lw and jalr in i type instructions
-# LW: imm[11:0] rs1 010 rd 0000011
 def lw(rd, rs1, imm):
     imm = int(imm)
     if imm < 0:
@@ -105,8 +110,6 @@ def sltiu(rd, rs1, imm):
     return imm + format(register_dict[rs1], "05b") + "011" + format(register_dict[rd], "05b") + "0010011"
 
 # S-Type Instructions
-# SW: imm[11:5] rs2 rs1 010 imm[4:0] 0100011
-
 def sw(rs2, rs1, imm):
     imm = int(imm)
     if imm < 0:
@@ -203,9 +206,7 @@ def lui(rd, imm):
     if int(imm) < 0:
         imm = format(abs(int(imm)), "032b")
         #imm=imm[-32:-12]
-        #Invert the bits of imm, i.e, 1's complement
         imm = imm.replace("0", "2").replace("1", "0").replace("2", "1")
-        # Now add 1 to make 2's complement
         imm = bin(int(imm, 2) + 1)[2:]
         imm = imm[-32:-12]
 
@@ -220,9 +221,7 @@ def auipc(rd, imm):
     if int(imm) < 0:
         imm = format(abs(int(imm)), "032b")
         #imm=imm[-32:-12]
-        #Invert the bits of imm, i.e, 1's complement
         imm = imm.replace("0", "2").replace("1", "0").replace("2", "1")
-        # Now add 1 to make 2's complement
         imm = bin(int(imm, 2) + 1)[2:]
         imm = imm[-32:-12]
 
@@ -246,23 +245,16 @@ def jal(rd, imm):
     imm_11 = str(imm)[10]
     imm_19_12 = str(imm)[12:20]
     return imm_20 + imm_10_1 + imm_11 + imm_19_12 + format(register_dict[rd], "05b") + "1101111"
-# Read input from file
-#input_file = sys.stdin.readlines()
+
 #input_file = input()
 #input_file = input_file.split("\n")
 # Process each line of input
 
-# Check if the input file path is provided
 if len(sys.argv) < 3:
     sys.exit("Input file path and output file path are required")
 
-# Get the input file path and output file path from command line arguments
 input_file_path = sys.argv[1]
 output_file_path = sys.argv[2]
-
-# Check if the input file exists
-if not os.path.exists(input_file_path):
-    sys.exit("Input file does not exist")
 
 # Open the input file
 input_file = open(input_file_path, "r")
@@ -273,12 +265,74 @@ if not input_file:
 
 # Process each line of input
 output = []
+total_lines = len(input_file.readlines())
+input_file.seek(0)
 line_number = 1
 for line in input_file:
+
     line = line.strip()
     parts = line.split()
     parts[0] = parts[0].lower()
     sub_parts = parts[1].split(",")
+    cont=False
+    lt=[]
+    label=False # No label present
+    labels={}
+    vt=0
+    opcode=valid.get(parts[0])
+    if parts[0]=="beq" and sub_parts[0]=="zero" and sub_parts[1]=="zero" and sub_parts[2]=="0":
+        vt+=1
+    if line_number == total_lines:
+        if parts[0]!="beq" or sub_parts[0]!="zero" or sub_parts[1]!="zero" or sub_parts[2]!="0":
+            #vt+=1
+            print(" Virtual instruction not being used as last instruction at line",line_number)
+            cont=True
+        if vt == 0:
+            print("Virtual instruction not present", line_number)
+            
+
+    for i in range(len(sub_parts)):
+         if sub_parts[i].isalpha():
+              lt.append(sub_parts[i])
+         else:
+              if '(' in sub_parts[i]:
+                   sub=sub_parts[i].split("(")
+                   sub=sub[1].split(")")
+                   if sub[0].isalpha():
+                        lt.append(sub[0])
+              elif not sub_parts[i].isdigit():
+                   lt.append(sub_parts[i])
+              elif parts[0] in ["lw","addi","sltiu","jalr"]:
+                   if int(sub_parts[i])>(2**12-1):
+                        print("Illegal immediate",sub_parts[i],"at line",line_number)
+                        cont=True
+                        break
+              elif parts[0] in ["sw"]:
+                   sub=sub_parts[i].split("(")
+                   if int(sub[0])>(2**12-1):
+                        print("Illegal immediate",sub_parts[i],"at line",line_number)
+                        cont=True
+                        break
+              elif parts[0] in ["beq","bne","blt","bge","bltu","bgeu"]:
+                   if int(sub_parts[i])>(2**12-1):
+                        print("Illegal immediate",sub_parts[i],"at line",line_number)
+                        cont=True
+                        break
+              elif parts[0] in ["lui","auipc"]:
+                   if int(sub_parts[i])>(2**32-1):
+                        print("Illegal immediate",sub_parts[i],"at line",line_number)
+                        cont=True
+                        break
+              elif parts[0] in ["jal"]:
+                   if int(sub_parts[i])>(2**20-1):
+                        print("Illegal immediate",sub_parts[i],"at line",line_number)
+                        cont=True
+                        break
+    if cont == True:
+        exit()      
+                    
+    if cont==True:
+        exit()      
     if parts[0] == "add":
         output.append(add(sub_parts[0], sub_parts[1], sub_parts[2]))
     elif parts[0] == "sub":
@@ -328,7 +382,67 @@ for line in input_file:
         output.append(jalr(sub_parts[0], sub_parts[1], int(sub_parts[2])))
     elif parts[0] == "jal":
         output.append(jal(sub_parts[0], sub_parts[1]))
-    
+    else:
+        # Assuming a label is present
+        label = True
+        labell = line.split(":")
+        if " " in labell[0]:
+            print(f"Error: Invalid label: {labell[0]} at line",line_number)
+            exit()
+        if labell[1][0] != " ":
+            print(f"Error: Invalid label: {labell[0]} at line",line_number)
+            exit()
+        parts=labell[1].strip().split()
+        sub_parts = parts[1].split(",")
+        if parts[0] == "add":
+            output.append(add(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "sub":
+            output.append(sub(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "sll":
+            output.append(sll(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "slt":
+            output.append(slt(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "sltu":
+            output.append(sltu(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "xor":
+            output.append(xor(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "srl":
+            output.append(srl(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "sra":
+            output.append(sra(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "or":
+            output.append(or_(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "and":
+            output.append(and_(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "addi":
+            output.append(addi(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "sltiu":
+            output.append(sltiu(sub_parts[0], sub_parts[1], sub_parts[2]))
+        elif parts[0] == "sw":
+            output.append(sw(sub_parts[0], sub_parts[1].split("(")[1].replace(")", ""), sub_parts[1].split("(")[0]))
+        elif parts[0] == "beq":
+            output.append(beq(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "bne":
+            output.append(bne(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "blt":
+            output.append(blt(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "bge":
+            output.append(bge(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "bltu":
+            output.append(bltu(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "bgeu":
+            output.append(bgeu(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "lui":
+            output.append(lui(sub_parts[0], int(sub_parts[1])))
+        elif parts[0] == "auipc":
+            output.append(auipc(sub_parts[0], int(sub_parts[1])))
+        elif parts[0] == "lw":
+            #lw t2,100(sp)
+            output.append(lw(sub_parts[0], sub_parts[1].split("(")[1].replace(")", ""), sub_parts[1].split("(")[0]))
+        elif parts[0] == "jalr":
+            output.append(jalr(sub_parts[0], sub_parts[1], int(sub_parts[2])))
+        elif parts[0] == "jal":
+            output.append(jal(sub_parts[0], sub_parts[1]))        
     line_number += 1
 
 # Close the input file
