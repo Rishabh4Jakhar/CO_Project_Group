@@ -1,6 +1,7 @@
 import sys
 import os
 
+# Define the register dictionary
 register_dict = {
     "zero": 0,
     "ra": 1,
@@ -69,10 +70,12 @@ def and_(rd, rs1, rs2):
     return "0000000" + format(register_dict[rs2], "05b") + format(register_dict[rs1], "05b") + "111" + format(register_dict[rd], "05b") + "0110011"
 
 # I-Type Instructions
+# Also add lw and jalr in i type instructions
+# LW: imm[11:0] rs1 010 rd 0000011
 def lw(rd, rs1, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0xFFF, "012b")  
+        imm = format(imm & 0xFFF, "012b")  # Convert to 12-bit binary using 2's complement
     else:
         imm = format(imm, "012b")
     return imm + format(register_dict[rs1], "05b") + "010" + format(register_dict[rd], "05b") + "0000011"
@@ -80,7 +83,7 @@ def lw(rd, rs1, imm):
 def jalr(rd, rs1, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0xFFF, "012b")
+        imm = format(imm & 0xFFF, "012b")  # Convert to 12-bit binary using 2's complement
     else:
         imm = format(imm, "012b")    
     return imm + format(register_dict[rs1], "05b") + "000" + format(register_dict[rd], "05b") + "1100111"
@@ -88,7 +91,7 @@ def jalr(rd, rs1, imm):
 def addi(rd, rs1, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0xFFF, "012b") 
+        imm = format(imm & 0xFFF, "012b")  # Convert to 12-bit binary using 2's complement
     else:
         imm = format(imm, "012b")    
     return imm + format(register_dict[rs1], "05b") + "000" + format(register_dict[rd], "05b") + "0010011"
@@ -96,27 +99,32 @@ def addi(rd, rs1, imm):
 def sltiu(rd, rs1, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0xFFF, "012b") 
+        imm = format(imm & 0xFFF, "012b")  # Convert to 12-bit binary using 2's complement
     else:
         imm = format(imm, "012b")    
     return imm + format(register_dict[rs1], "05b") + "011" + format(register_dict[rd], "05b") + "0010011"
 
 # S-Type Instructions
+# SW: imm[11:5] rs2 rs1 010 imm[4:0] 0100011
+
 def sw(rs2, rs1, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0xFFF, "012b") 
+        imm = format(imm & 0xFFF, "012b")  # Convert to 12-bit binary using 2's complement
     else:
         imm = format(imm, "012b")
-    imm_4_0 = str(imm)[7:12] 
-    imm_11_5 = str(imm)[0:7]
+    #imm = format(int(imm), "012b")
+    imm_4_0 = str(imm)[7:12]  # Extract bits 11:7 from imm
+    imm_11_5 = str(imm)[0:7]  # Extract bits 6:0 from imm
     return imm_11_5 + format(register_dict[rs2], "05b") + format(register_dict[rs1], "05b") + "010" + imm_4_0 + "0100011"
 
 # B-Type Instructions
+# beq: imm[12] imm[10:5] rs2 rs1 000 imm[4:1] imm[11] 1100011
+
 def beq(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b") 
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -129,7 +137,7 @@ def beq(rs1, rs2, imm):
 def bne(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b")
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -142,7 +150,7 @@ def bne(rs1, rs2, imm):
 def blt(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b")
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -155,7 +163,7 @@ def blt(rs1, rs2, imm):
 def bge(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b")
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -168,7 +176,7 @@ def bge(rs1, rs2, imm):
 def bltu(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b")
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -181,7 +189,7 @@ def bltu(rs1, rs2, imm):
 def bgeu(rs1, rs2, imm):
     imm = int(imm)
     if imm < 0:
-        imm = format(imm & 0x1FFF, "013b")
+        imm = format(imm & 0x1FFF, "013b")  # Convert to 13-bit binary using 2's complement
     else:
         imm = format(imm, "013b")
     imm = imm[::-1]
@@ -190,14 +198,19 @@ def bgeu(rs1, rs2, imm):
     imm_10_5 = str(imm)[5:11]
     imm_12 = str(imm)[12]
     return imm_12 + imm_10_5 + format(register_dict[rs2], "05b") + format(register_dict[rs1], "05b") + "111" + imm_4_1 + imm_11 + "1100011"
-
 # U-Type Instructions
 def lui(rd, imm):
     if int(imm) < 0:
         imm = format(abs(int(imm)), "032b")
+        #imm=imm[-32:-12]
+        #Invert the bits of imm, i.e, 1's complement
         imm = imm.replace("0", "2").replace("1", "0").replace("2", "1")
+        # Now add 1 to make 2's complement
         imm = bin(int(imm, 2) + 1)[2:]
         imm = imm[-32:-12]
+
+        #print("#",imm)
+        #imm = imm[-32:-12]
     else:
         imm = format(int(imm), "032b")
         imm = imm[-32:-12]
@@ -206,9 +219,15 @@ def lui(rd, imm):
 def auipc(rd, imm):
     if int(imm) < 0:
         imm = format(abs(int(imm)), "032b")
+        #imm=imm[-32:-12]
+        #Invert the bits of imm, i.e, 1's complement
         imm = imm.replace("0", "2").replace("1", "0").replace("2", "1")
+        # Now add 1 to make 2's complement
         imm = bin(int(imm, 2) + 1)[2:]
         imm = imm[-32:-12]
+
+        #print("#",imm)
+        #imm = imm[-32:-12]
     else:
         imm = format(int(imm), "020b")
         imm = imm[-32:-12]
@@ -217,29 +236,42 @@ def auipc(rd, imm):
 # J-Type Instructions
 def jal(rd, imm):
     if int(imm) < 0:
-        imm = format(int(imm) & 0xFFFFF, "020b")
+        imm = format(int(imm) & 0xFFFFF, "020b")  # Convert to 20-bit binary
     else:
         imm = format(int(imm), "020b")
     imm = imm[::-1]
+    #print("#", imm, "#")
     imm_20 = str(imm)[19]
     imm_10_1 = str(imm)[10:0:-1]
     imm_11 = str(imm)[10]
     imm_19_12 = str(imm)[12:20]
     return imm_20 + imm_10_1 + imm_11 + imm_19_12 + format(register_dict[rd], "05b") + "1101111"
+# Read input from file
+#input_file = sys.stdin.readlines()
+#input_file = input()
+#input_file = input_file.split("\n")
+# Process each line of input
+
+# Check if the input file path is provided
 if len(sys.argv) < 3:
     sys.exit("Input file path and output file path are required")
 
+# Get the input file path and output file path from command line arguments
 input_file_path = sys.argv[1]
 output_file_path = sys.argv[2]
 
+# Check if the input file exists
 if not os.path.exists(input_file_path):
     sys.exit("Input file does not exist")
 
+# Open the input file
 input_file = open(input_file_path, "r")
 
+# Check if the input file is empty
 if not input_file:
     sys.exit("Input file is empty")
 
+# Process each line of input
 output = []
 line_number = 1
 for line in input_file:
@@ -290,6 +322,7 @@ for line in input_file:
     elif parts[0] == "auipc":
         output.append(auipc(sub_parts[0], int(sub_parts[1])))
     elif parts[0] == "lw":
+        #lw t2,100(sp)
         output.append(lw(sub_parts[0], sub_parts[1].split("(")[1].replace(")", ""), sub_parts[1].split("(")[0]))
     elif parts[0] == "jalr":
         output.append(jalr(sub_parts[0], sub_parts[1], int(sub_parts[2])))
@@ -298,12 +331,16 @@ for line in input_file:
     
     line_number += 1
 
+# Close the input file
 input_file.close()
 
+# Write output to the output file
 output_file = open(output_file_path, "w")
 for line in output:
     output_file.write(line + "\n")
 
+# Close the output file
 output_file.close()
 
+# Exit the program
 sys.exit()
