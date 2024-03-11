@@ -296,10 +296,10 @@ for line in input_file:
               lt.append(sub_parts[i])
          else:
               if '(' in sub_parts[i]:
-                   sub=sub_parts[i].split("(")
-                   sub=sub[1].split(")")
-                   if sub[0].isalpha():
-                        lt.append(sub[0])
+                   sube=sub_parts[i].split("(")
+                   sube=sube[1].split(")")
+                   if sube[0].isalpha():
+                        lt.append(sube[0])
               elif not sub_parts[i].isdigit():
                    lt.append(sub_parts[i])
               elif parts[0] in ["lw","addi","sltiu","jalr"]:
@@ -308,8 +308,8 @@ for line in input_file:
                         cont=True
                         break
               elif parts[0] in ["sw"]:
-                   sub=sub_parts[i].split("(")
-                   if int(sub[0])>(2**12-1):
+                   sube=sub_parts[i].split("(")
+                   if int(sube[0])>(2**12-1):
                         print("Illegal immediate",sub_parts[i],"at line",line_number)
                         cont=True
                         break
@@ -329,10 +329,7 @@ for line in input_file:
                         cont=True
                         break
     if cont == True:
-        exit()      
-                    
-    if cont==True:
-        exit()      
+        exit()            
     if parts[0] == "add":
         output.append(add(sub_parts[0], sub_parts[1], sub_parts[2]))
     elif parts[0] == "sub":
