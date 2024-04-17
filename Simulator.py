@@ -1,8 +1,13 @@
 import sys
 import os
+reg_dic = {'program': '0b00000000000000000000000000000000', '00000': '00000000000000000000000000000000', '00001': '00000000000000000000000000000000', '00010': '00000000000000000000000100000000', '00011': '00000000000000000000000000000000', '00100': '00000000000000000000000000000000', '00101': '00000000000000000000000000000000', '00110': '00000000000000000000000000000000', '00111': '00000000000000000000000000000000', 
+    '01000': '00000000000000000000000000000000', '01001': '00000000000000000000000000000000', '01010': '00000000000000000000000000000000', '01011': '00000000000000000000000000000000', '01100': '00000000000000000000000000000000', '01101': '00000000000000000000000000000000', '01110': '00000000000000000000000000000000', '01111': '00000000000000000000000000000000', 
+    '10000': '00000000000000000000000000000000', '10001': '00000000000000000000000000000000', '10010': '00000000000000000000000000000000', '10011': '00000000000000000000000000000000', '10100': '00000000000000000000000000000000', '10101': '00000000000000000000000000000000', '10110': '00000000000000000000000000000000', '10111': '00000000000000000000000000000000', 
+    '11000': '00000000000000000000000000000000', '11001': '00000000000000000000000000000000', '11010': '00000000000000000000000000000000', '11011': '00000000000000000000000000000000', '11100': '00000000000000000000000000000000', '11101': '00000000000000000000000000000000', '11110': '00000000000000000000000000000000', '11111': '00000000000000000000000000000000'}
+
 
 def sext(imm):
-    if imm[0] == 0:
+    if imm[0] == '0':
         while len(imm)<32 :
             imm = '0' + imm
         return imm
@@ -10,7 +15,7 @@ def sext(imm):
         imm = '1' + imm
     return imm
 
-def decimaltobinary(num):
+def dec_to_bin(num):
     num=int(num)
     if num >= 0:
         a = num
@@ -22,7 +27,6 @@ def decimaltobinary(num):
         s = s[::-1]
         filler = 32 - len(s)
         if filler <= 0:
-            #print("number out of Range")
             s='-1'
             return s
         s = filler*"0" + s
@@ -43,305 +47,320 @@ def decimaltobinary(num):
         s = s[::-1]
         filler = 32 - len(s)
         if filler <= 0:
-            #print("Number out of Range")
             s='-1'
             return s
         s = filler*"1" + s
         return s 
 
-def signed_conversion(imm):
+def sign_convo(imm):
     if imm[0] == '1':
         flipped_bits = ''.join('1' if bit == '0' else '0' for bit in imm)
-        return -(int(flipped_bits, 2) + 1)
+        return -(int(flipped_bits, 2) + 1)  
     else:
         return int(imm, 2)
 
-def unsigned_conversion(imm):
-    return int(imm, 2)
-
-def beq(rs1, rs2, imm, pc):
+def beq(rs1, rs2, imm, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs1)
-    imm = signed_conversion(imm)
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    imm = sign_convo(imm)
     if rs1 == rs2:
-        pc += imm                              #assuming pc is int
+        pro_count += imm                              
     else:
-        pc += 4                                #assuming pc is int
-    return pc
+        pro_count += 4                                
+    return pro_count
 
-def bne(rs1, rs2, imm, pc):
+def bne(rs1, rs2, imm, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs1)
-    imm = signed_conversion(imm)
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    imm = sign_convo(imm)
     if rs1 != rs2:
-        pc += imm                              #assuming pc is int
+        pro_count += imm                             
     else:
-        pc += 4                                #assuming pc is int
-    return imm
+        pro_count += 4                                
+    return pro_count
 
-def bge(rs1, rs2, imm, pc):
+def bge(rs1, rs2, imm, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs1)
-    imm = signed_conversion(imm)
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    imm = sign_convo(imm)
     if rs1 >= rs2:
-        pc += imm                              #assuming pc is int
+        pro_count += imm                              
     else:
-        pc += 4                                #assuming pc is int
-    return pc
+        pro_count += 4                               
+    return pro_count
 
-def blt(rs1, rs2, imm, pc):
+def blt(rs1, rs2, imm, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs1)
-    imm = signed_conversion(imm)
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    imm = sign_convo(imm)
     if rs1 < rs2:
-        pc += imm                              #assuming pc is int
+        pro_count += imm                              
     else:
-        pc += 4                                #assuming pc is int                                         
-    return pc
-def B(i, pc, reg_dic):
-    imm = i[0] + i[24] + i[1:7] + i[20:24]
+        pro_count += 4                                                                   
+    return pro_count
+
+
+def B(i, pro_count):
+    rev_in = i[::-1]
+    
+    imm = i[0] + rev_in[7] + i[1:7] + rev_in[8:12][::-1]
     imm = sext(imm)
-    func3 = i[-15:-12]
-    rs1 = i[-20:-15]
-    rs2 = i[-25:-20]
+    func3 = rev_in[12:15][::-1]
+    rs1 = rev_in[15:20][::-1]
+    rs2 = rev_in[20:25][::-1]
     if func3 == "000":
-        pc = beq(reg_dic[rs1], reg_dic[rs2], imm, pc)
-    if func3 == "001":
-        pc = bne(reg_dic[rs1], reg_dic[rs2], imm, pc)
-    if func3 == "100":
-        pc = blt(reg_dic[rs1], reg_dic[rs2], imm, pc)
-    if func3 == "101":
-        pc = bge(reg_dic[rs1], reg_dic[rs2], imm, pc)
-    return pc                               
+        pro_count = beq(reg_dic[rs1], reg_dic[rs2], imm, pro_count)
+    elif func3 == "001":
+        pro_count = bne(reg_dic[rs1], reg_dic[rs2], imm, pro_count)
+    elif func3 == "100":
+        pro_count = blt(reg_dic[rs1], reg_dic[rs2], imm, pro_count)
+    elif func3 == "101":
+        pro_count = bge(reg_dic[rs1], reg_dic[rs2], imm, pro_count)
+    return pro_count                               
 
-# Add: add rd, rs1, rs2 rd = sext(rs1) + sext(rs2) (Overflow are ignored)
-def add(rd, rs1, rs2, pc, reg_dic):
+
+def add(rd, rs1, rs2, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs2)
-    reg_dic[rd] = decimaltobinary(rs1 + rs2)   #check for rs1 + rs2 overflow
-    return pc + 4                              #assuming pc is int
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    reg_dic[rd] = dec_to_bin(rs1 + rs2)   
+    return pro_count + 4                              
 
-# Sub: sub rd, rs1, rs2 rd = signed(rs1) - signed(rs2) 
-def sub(rd, rs1, rs2, pc, reg_dic):
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs2)
-    reg_dic[rd] = decimaltobinary(rs1 - rs2)   #check for rs1 - rs2 overflow
-    return pc + 4                              #assuming pc is int
 
-# Slt: slt rd, rs1, rs2 rd = 1. If sext(rs1) < sext(rs2)
-def slt(rd, rs1, rs2, pc, reg_dic):
+def sub(rd, rs1, rs2, pro_count):
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
+    reg_dic[rd] = dec_to_bin(rs1 - rs2)   
+    return pro_count + 4                             
+
+
+def slt(rd, rs1, rs2, pro_count):
     rs1 = sext(rs1)
     rs2 = sext(rs2)
-    rs1 = signed_conversion(rs1)
-    rs2 = signed_conversion(rs2)
+    rs1 = sign_convo(rs1)
+    rs2 = sign_convo(rs2)
     if rs1 < rs2:
-        reg_dic[rd] = decimaltobinary(1)
-    return pc + 4                              #assuming pc is int
+        reg_dic[rd] = dec_to_bin(1)
+    return pro_count + 4                             
 
-# Sltu: sltu rd, rs1, rs2 rd = 1. If unsigned(rs1) < unsigned(rs2)
-def sltu(rd, rs1, rs2, pc, reg_dic):
+def sltu(rd, rs1, rs2, pro_count):
     if rs1 < rs2:
-        reg_dic[rd] = decimaltobinary(1)
-    return pc + 4                              #assuming pc is int
+        reg_dic[rd] = dec_to_bin(1)
+    return pro_count + 4                              
 
-# XOR: xor rd, rs1, rs2 rd = rs1⊕rs2 (Bitwise Exor)
-def xor(rd, rs1, rs2, pc, reg_dic):
-    reg_dic[rd] = decimaltobinary(rs1 ^ rs2)
-    return pc + 4                              #assuming pc is int
 
-# sll rd, rs1, rs2 rd = rs1<<unsigned(rs2[4:0])
-# Left shift rs1 by the value in lower 5 bits of rs2.
-def sll(rd, rs1, rs2, pc, reg_dic):
+def xor(rd, rs1, rs2, pro_count):
+    reg_dic[rd] = dec_to_bin(rs1 ^ rs2)
+    return pro_count + 4                              
+
+
+def sll(rd, rs1, rs2, pro_count):
     rs2 = rs2[-5:]
-    reg_dic[rd] = decimaltobinary(rs1 << int(rs2, 2))
-    return pc + 4                              #assuming pc is int
+    reg_dic[rd] = dec_to_bin(int(rs1, 2) << int(rs2, 2))
+    return pro_count + 4                             
 
-# srl rd, rs1, rs2 rd = rs1>>unsigned(rs2[4:0])
-# Right shift rs1 by the value in lower 5 bits of rs2.
-def srl(rd, rs1, rs2, pc, reg_dic):
-    rs2 = rs2[-5:]                             #check indexing here
-    reg_dic[rd] = decimaltobinary(rs1 >> int(rs2, 2))
-    return pc + 4                              #assuming pc is int
 
-# or rd, rs1, rs2 rd = rs1|rs2 (Bitwise logical or.)
-def or_(rd, rs1, rs2, pc, reg_dic):
-    reg_dic[rd] = decimaltobinary(rs1 | rs2)
-    return pc + 4                              #assuming pc is int
+def srl(rd, rs1, rs2, pro_count):
+    rs2 = rs2[-5:]                            
+    reg_dic[rd] = dec_to_bin(int(rs1, 2) >> int(rs2, 2))
+    return pro_count + 4                              
 
-# and rd, rs1, rs2 rd = rs1&rs2 (Bitwise logical and.)
-def and_(rd, rs1, rs2, pc, reg_dic):
-    reg_dic[rd] = decimaltobinary(rs1 & rs2)
-    return pc + 4                              #assuming pc is int
-# [31:25] [24:20] [19:15] [14:12] [11:7] [6:0]
-# funct7 rs2 rs1 funct3 rd opcode R-type
-def R(i, pc, reg_dic):
-    rd = i[-7:]
-    rs1 = i[-20:-15]
-    rs2 = i[-25:-20]
-    funct3 = i[-15:-12]
+
+def or_inst(rd, rs1, rs2, pro_count):
+    reg_dic[rd] = dec_to_bin(int(rs1,2) | int(rs2, 2))
+    return pro_count + 4                              
+
+def and_ins(rd, rs1, rs2, pro_count):
+    reg_dic[rd] = dec_to_bin(int(rs1, 2) & int(rs2, 2))
+    return pro_count + 4                              
+
+def R(i, pro_count):
+    rev_in = i[::-1]
+    rd = rev_in[7:12][::-1]
+    rs1 = rev_in[15:20][::-1]
+    rs2 = rev_in[20:25][::-1]
+    funct3 = rev_in[12:15][::-1]
     funct7 = i[:7]  
     if (funct3 == "000") and (funct7 == "0000000"):
-        pc = add(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "000") and (funct7 == "0100000"):
-        pc = sub(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "010") and (funct7 == "0000000"):
-        pc = slt(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "011") and (funct7 == "0000000"):
-        pc = sltu(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "100") and (funct7 == "0000000"):
-        pc = xor(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "001") and (funct7 == "0000000"):
-        pc = sll(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "101") and (funct7 == "0000000"):
-        pc = srl(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "110") and (funct7 == "0000000"):
-        pc = or_(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    if (funct3 == "111") and (funct7 == "0000000"):
-        pc = and_(rd, reg_dic[rs1], reg_dic[rs2], pc, reg_dic)
-    return pc
-def lw(rd, rs1, imm, pc, reg_dic, mem_dic):
-    rs1 = sext(rs1)
-    rs1 = signed_conversion(rs1)               
-    imm = signed_conversion(imm)               #check for rs1 + imm overflow
-    reg_dic[rd] = mem_dic[rs1+imm]             #if binary value not 32 bits, you need to sign extend
-    return pc + 4                              #assuming pc is int
-def addi(rd, rs1, imm, pc, reg_dic):
-    rs1 = sext(rs1)
-    rs1 = signed_conversion(rs1)
-    imm = signed_conversion(imm)
-    reg_dic[rd] = decimaltobinary(rs1 + imm)   #check for rs1 + imm overflow
-    return pc + 4                              #assuming pc is int 
+        pro_count = add(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "000") and (funct7 == "0100000"):
+        pro_count = sub(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "010") and (funct7 == "0000000"):
+        pro_count = slt(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "011") and (funct7 == "0000000"):
+        pro_count = sltu(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "100") and (funct7 == "0000000"):
+        pro_count = xor(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "001") and (funct7 == "0000000"):
+        pro_count = sll(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "101") and (funct7 == "0000000"):
+        pro_count = srl(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "110") and (funct7 == "0000000"):
+        pro_count = or_inst(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    elif (funct3 == "111") and (funct7 == "0000000"):
+        pro_count = and_ins(rd, reg_dic[rs1], reg_dic[rs2], pro_count)
+    return pro_count
 
-def jalr(rd, x6, imm, pc, reg_dic):
-    reg_dic[rd] = decimaltobinary(pc + 4)      #pc + 4 is int but reg_dic[rd] stores binary value
-    x6 = sext(x6)
-    x6 = signed_conversion(x6)
-    imm = signed_conversion(imm)
-    pc += decimaltobinary(x6 + imm)            #check for rs1 + imm overflow
-    pc = pc[:-1] + "0"                         #here pc is now in binary and binary str is being returned,
-                                               #but otherwise i am returning pc with type <int>, handle that
-    return pc 
+def lw(rd, rs1, imm, pro_count):        
+    rs1 = sign_convo(rs1)
+    rs1 = f"0x{rs1:08X}"           
+    imm = sign_convo(imm)
+    immt = f"0x{imm:08X}"
+    t= hex(int(rs1[2:], 16) + int(immt[2:], 16))
+    t32 = f"0x{int(t, 16):08X}"
 
-def I(i, pc, reg_dic, mem_dic):
+    
+    reg_dic[rd] = mem[t32.lower()]             
+    return pro_count + 4                              
+def addi(rd, rs1, imm, pro_count):
+    rs1 = sext(rs1)
+    rs1 = sign_convo(rs1)
+    imm = sign_convo(imm)
+    reg_dic[rd] = dec_to_bin(rs1 + imm)   
+    return pro_count + 4                              
+
+def jalr(rd, x6, imm, pro_count):
+    reg_dic[rd] = dec_to_bin(pro_count + 4)      
+    x6 = sign_convo(x6)
+    imm = sign_convo(imm)
+    pro_count = dec_to_bin(x6 + imm)            
+    pro_count = pro_count[:-1] + "0"
+    pro_count = int(pro_count, 2)                        
+    return pro_count 
+
+def I(i, pro_count):
+    rev_in = i[::-1]
     imm = i[:12]
     imm = sext(imm)
-    rd = i[-12:-7]
-    rs1 = i[-20:-15] 
-    func3 = i[-15:-12]
+    rd = rev_in[7:12][::-1]
+    rs1 = rev_in[15:20][::-1] 
+    func3 = rev_in[12:15][::-1]
     opcode = i[-7:]
-    if (func3 == "010") and (opcode == "0000011"):
-        pc = lw(rd, reg_dic[rs1], imm, pc, reg_dic, mem_dic)
-    if func3 == "000" and (opcode == "0010011"):
-        pc = addi(rd, reg_dic[rs1], imm, pc, reg_dic)
     if func3 == "000" and (opcode == "1100111"):
-        pc = jalr(rd, reg_dic[rs1], imm, pc, reg_dic)
-    return pc
+        pro_count = jalr(rd, reg_dic[rs1], imm, pro_count)    
+    elif (func3 == "010") and (opcode == "0000011"):
+        pro_count = lw(rd, reg_dic[rs1], imm, pro_count)
+    elif  (opcode == "0010011") and (func3 == "000"):
+        pro_count = addi(rd, reg_dic[rs1], imm, pro_count)
+    return pro_count
 
-def S_sw(i, pc, reg_dic, mem_dic):
-    imm = i[:-25] + i[-12:-7]
-    imm = sext(imm)
-    imm = signed_conversion(imm)
-    rs1 = i[-20:-15]
-    rs1 = sext(rs1)                           #check for rs1 + imm overflow
-    rs1 = signed_conversion(rs1)
-    rs2 = i[-25:-20]
-    reg_dic[rs2] = mem_dic[rs1 + imm]         #if binary value not 32 bits, you need to sign extend
-    return pc + 4                             #assuming pc is int
+def S_sw(i, pro_count, mem):
+    rev_in = i[::-1]
+    imm = i[:7]+i[20:25]    
+    imm = sign_convo(sext(imm))
+    rs1 = rev_in[15:20][::-1]
+    rs1 = sign_convo(sext(reg_dic[rs1]))                         
+    num = rs1+imm
+    num = f"0x{num:08X}".lower()
+    rs2 = rev_in[20:25][::-1]
+    mem[num] = reg_dic[rs2]
+    return pro_count + 4                                                          
 
-def lui(rd, imm, pc, reg_dic):
-    imm = signed_conversion(imm)
-    reg_dic[rd] = decimaltobinary(pc + imm)   #pc + imm is int but reg_dic[rd] stores binary value
-    return pc + 4                             #assuming pc is int
+def lui(rd, imm, pro_count):
+    imm = sign_convo(imm)
+    reg_dic[rd] = dec_to_bin(imm)   
+    return pro_count + 4                            
 
-def aiupc(rd, imm, pc, reg_dic):
-    reg_dic[rd] = imm
-    return pc + 4                             #assuming pc is int
+def auipc(rd, imm, pro_count):
+    imm = sign_convo(imm)
+    reg_dic[rd] = dec_to_bin(imm+pro_count)
+    return pro_count + 4                             
 
-def U(i, pc, reg_dic):
-    imm = i[:-12]
-    imm = "000000000000" + imm
-    rd = i[-12:-7]
-    opcode = i[-7:]
+def U(i, pro_count):
+    rev_in = i[::-1]
+    opcode = i[-7:]    
+    imm = rev_in[12:][::-1]
+    imm =  imm + "000000000000"
+    rd = rev_in[7:12][::-1]
     if opcode == "0110111":
-        pc = lui(rd, imm, pc, reg_dic)
-    if opcode == "0010111":
-        pc = aiupc(rd, imm, pc, reg_dic)
-    return pc
+        pro_count = lui(rd, imm, pro_count)
+    elif opcode == "0010111":
+        pro_count = auipc(rd, imm, pro_count)
+    return pro_count
 
-def J_jal(i, pc, reg_dic):
-    imm = i[0] + i[13:21] + i[12] + i[1:11]                #check
-    imm = sext(imm)
-    imm = signed_conversion(imm)
-    rd = i[-12:-7]
-    reg_dic[rd] = decimaltobinary(pc + 4)     #pc + imm is int but reg_dic[rd] stores binary value
-    pc += imm                                 #assuming pc is int
-    return pc                                 #assuming pc is int                                               
+def J_jal(i, pro_count):
+    rev_in = i[::-1]
+    imm = i[0] + rev_in[12:20][::-1] + rev_in[20] + i[1:11]              
+    imm = sign_convo(sext(imm))
+    rd = rev_in[7:12][::-1]
+    reg_dic[rd] = dec_to_bin(pro_count + 4)     
+    pro_count = dec_to_bin(pro_count + imm)            
+    pro_count = pro_count[:-1] + "0"
+    return pro_count                                                                           
 
-def simulator(reg_dic, mem_dic, pc_dic):
-    pc = 0
-    while pc <= 252:
-        inst = pc_dic[pc]
-        opc = inst[-7:]
-        
-        if opc == "0110011":
-            pc = R(inst, pc, reg_dic)
-        if opc == "0000011" or opc == "0010011" or opc == "1100111":
-            pc = I(inst, pc, reg_dic, mem_dic)
-        if opc == "0100011":
-            pc = S_sw(inst, pc, reg_dic, mem_dic)
-        if opc == "1100011":
-            pc = B(inst, pc, reg_dic)
-        if opc == "0010111" or opc == "0110111":
-            pc = U(inst, pc, reg_dic)
-        if opc == "1101111":
-            pc = J_jal(inst, pc, reg_dic)
-        reg_dic["program"] = "0b" + decimaltobinary(pc)
-
-
-
-reg_dic = {"program":"0b00000000000000000000000000000000", }
-mem_dic = {}
-# Read input from file
-if len(sys.argv) < 3:
-    sys.exit("Input file path and output file path are required")
-
-# Get the input file path and output file path from command line arguments
+def sim():
+    pro_count = 0
+    while pro_count <= 252:
+        inst = pc_dict[pro_count]
+        op = inst[-7:]
+        if inst == "00000000000000000000000001100011":
+            l=[]
+            for i in reg_dic.keys():
+                if i=="program":
+                    l.append(reg_dic[i])
+                else:
+                    l.append('0b'+reg_dic[i])
+            out_list.append(" ".join(l))             
+            break
+        if op == "0110011":
+            pro_count = R(inst, pro_count)
+        elif op == "0000011" or op == "0010011" or op == "1100111":
+            pro_count = I(inst, pro_count)
+        elif op == "0100011":
+            pro_count = S_sw(inst, pro_count, mem)
+        elif op == "1100011":
+            pro_count = B(inst, pro_count)
+        elif op == "0010111" or op == "0110111":
+            pro_count = U(inst, pro_count)
+        elif op == "1101111":
+            pro_count = J_jal(inst, pro_count)
+        reg_dic["program"] = "0b" + dec_to_bin(pro_count) 
+        l=[]
+        for i in reg_dic.keys():
+            if i=="program":
+                l.append(reg_dic[i])
+            else:
+                l.append('0b'+reg_dic[i])
+        out_list.append(" ".join(l)) 
+mem = {}
+mem_add = {}
+for i in range(32):  
+    address = f'0x{int(0x00010000 + i*4):08X}'.lower() 
+    mem[address] = '0' * 32
+mem_keys = list(mem.keys())
+keys1 = list(reg_dic.keys())
+keys1.remove('program')
+keys2 = list(mem.keys())
+for key1, key2 in zip(keys1, keys2):
+    mem_add[key1] = key2
 input = sys.argv[1]
 output = sys.argv[2]
-
-# Check if the input file exists
 if not os.path.exists(input):
-    sys.exit("Input file does not exist")
-
-# Open the input file
-input_file = open(input, "r")
+    sys.exit("Input file path does not exist")
+out_list = []
 with open(input, "r") as input_file:
-    # Check if the input file is empty
     if not input_file:
-        sys.exit("Input file is empty")
-    # Read the input file
+        sys.exit("Input file empty")
     x = input_file.readlines()
-    pc_dic = {}
-    pc = 0
-    output = []
+    pc_dict = {}
+    pro_count = 0
     for line in x:
-        pc_dic[pc] = line
-        pc += 4
-
-simulator(reg_dic, mem_dic, pc_dic)
-# Write output to the output file
-with open(output, "r") as output_file:
-    for line in output:
+        pc_dict[pro_count] = line.strip("\n")
+        pro_count += 4
+sim()
+with open(output, "w") as output_file:
+    for line in out_list:
         output_file.write(line + "\n")
+    for i in mem.keys():
+        output_file.write(i + ":" + "0b" + mem[i] + "\n")
 
 sys.exit()
