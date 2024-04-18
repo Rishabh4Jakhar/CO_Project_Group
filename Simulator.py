@@ -105,12 +105,12 @@ def B(i, pro_count):
 
 
 def add(rd, rs1, rs2, pro_count):
-    reg_dic[rd] = dec_to_bin(rs1 + rs2)   
+    reg_dic[rd] = dec_to_bin(int(rs1, 2) + int(rs2, 2))   
     return pro_count + 4                              
 
 
 def sub(rd, rs1, rs2, pro_count):
-    reg_dic[rd] = dec_to_bin(rs1 - rs2)   
+    reg_dic[rd] = dec_to_bin(int(rs1, 2) - int(rs2, 2))   
     return pro_count + 4                             
 
 
@@ -256,6 +256,7 @@ def J_jal(i, pro_count):
     reg_dic[rd] = dec_to_bin(pro_count + 4)     
     pro_count = dec_to_bin(pro_count + imm)            
     pro_count = pro_count[:-1] + "0"
+    pro_count = int(pro_count, 2)
     return pro_count                                                                           
 def append_inst(i):
     l=[]
@@ -272,6 +273,7 @@ def sim():
     while pro_count <= 252:
         inst = pc_dict[pro_count]
         op = inst[-7:]
+        #00000001100000000000000011101111
         if inst == "00000000000000000000000001100011":
             append_inst(i)      
             break
@@ -288,6 +290,7 @@ def sim():
         elif op == "1101111":
             pro_count = J_jal(inst, pro_count)
         reg_dic["pc"] = "0b" + dec_to_bin(pro_count) 
+        #print(pro_count, type(pro_count))
         append_inst(i)
 mem = {}
 mem_add = {}
