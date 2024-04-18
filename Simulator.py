@@ -18,20 +18,13 @@ def sext(imm):
 def dec_to_bin(decimal_num):
     decimal_num = int(decimal_num)
     num_bits = 32
-    # Check if the number is within the representable range
     min_val = -(2**(num_bits - 1))
     max_val = (2**(num_bits - 1)) - 1
     if decimal_num < min_val or decimal_num > max_val:
         raise ValueError(f"The decimal number {decimal_num} is out of range for {num_bits}-bit two's complement representation.")
-    
-    # Convert the absolute value of the decimal number to binary
     binary_str = bin(abs(decimal_num))[2:].zfill(num_bits)
-
-    # If the number is negative, apply two's complement
     if decimal_num < 0:
-        # Invert the bits
         inverted_bits = ''.join('1' if bit == '0' else '0' for bit in binary_str)
-        # Add 1 to the inverted bits
         twos_complement = bin(int(inverted_bits, 2) + 1)[2:].zfill(num_bits)
         return twos_complement
     else:
@@ -105,12 +98,12 @@ def B(i, pro_count):
 
 
 def add(rd, rs1, rs2, pro_count):
-    reg_dic[rd] = dec_to_bin(int(rs1, 2) + int(rs2, 2))   
+    reg_dic[rd] = dec_to_bin(rs1 + rs2)   
     return pro_count + 4                              
 
 
 def sub(rd, rs1, rs2, pro_count):
-    reg_dic[rd] = dec_to_bin(int(rs1, 2) - int(rs2, 2))   
+    reg_dic[rd] = dec_to_bin(rs1 - rs2)   
     return pro_count + 4                             
 
 
